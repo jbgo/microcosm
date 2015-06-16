@@ -40,7 +40,7 @@
               <td>{{.State}}</td>
               <td>{{truncate .ID 12}}</td>
               <td>{{.Name|noslash}}</td>
-              <td>{{.Container.Path}} {{join .Container.Args " "}}</td>
+              <td>{{.Original.Path}} {{join .Original.Args " "}}</td>
             </tr>
           {{end}}
 
@@ -52,7 +52,7 @@
               <td>{{.State}}</td>
               <td>{{truncate .ID 12}}</td>
               <td>{{.Name|noslash}}</td>
-              <td>{{.Container.Path}} {{join .Container.Args " "}}</td>
+              <td>{{.Original.Path}} {{join .Original.Args " "}}</td>
             </tr>
           {{end}}
         </tbody>
