@@ -18,47 +18,29 @@
     <![endif]-->
   </head>
   <body>
+    <div class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">Mission Control</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li><a href="/services">Services</a></li>
+            <li><a href="/containers">Containers</a></li>
+            <li><a href="/repos">Repos</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
     <div class="container">
-      <h1>Mission Control</h1>
-
-      <table class="table table-striped table-condensed">
-        <thead>
-          <tr>
-            <th>State</th>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Command</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr>
-            <th colspan="4">Running</th>
-          </tr>
-          {{range .Running}}
-            <tr>
-              <td>{{.State}}</td>
-              <td>{{truncate .ID 12}}</td>
-              <td>{{.Name|noslash}}</td>
-              <td>{{.Original.Path}} {{join .Original.Args " "}}</td>
-            </tr>
-          {{end}}
-
-          <tr>
-            <th colspan="4">Not Running</th>
-          </tr>
-          {{range .NotRunning}}
-            <tr>
-              <td>{{.State}}</td>
-              <td>{{truncate .ID 12}}</td>
-              <td>{{.Name|noslash}}</td>
-              <td>{{.Original.Path}} {{join .Original.Args " "}}</td>
-            </tr>
-          {{end}}
-        </tbody>
-
-      </table>
-
+      {{.Content}}
     </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->

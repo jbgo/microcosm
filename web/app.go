@@ -1,17 +1,21 @@
 package web
 
 import (
+	"log"
 	"net/http"
+	"os"
 	"path"
 	"runtime"
 )
 
 type WebApp struct {
 	Root string
+	Log  *log.Logger
 }
 
 func BuildApp() WebApp {
 	app := WebApp{Root: findRootPath()}
+	app.Log = log.New(os.Stdout, "web ", log.LstdFlags)
 	return app
 }
 

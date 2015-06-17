@@ -1,0 +1,12 @@
+<h2>{{.Name|noslash}}<br>
+  <small>{{.ID}}</small>
+</h2>
+<hr>
+
+<dl>
+  <dt>State</dt>
+  <dd>{{.State}}</dd>
+
+  <dt>Command</dt>
+  <dd><tt>{{.Original.Path}} {{join .Original.Args " "}}</tt></dd>
+</dl>

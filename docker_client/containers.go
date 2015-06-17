@@ -35,6 +35,16 @@ func (c *Container) init(d *docker.Container) {
 	}
 }
 
+func (d DockerClient) FindContainer(containerID string) (*Container, error) {
+	c := &Container{}
+	inspect, err := d.client.InspectContainer(containerID)
+	if err != nil {
+		return c, err
+	}
+	c.init(inspect)
+	return c, err
+}
+
 func (d DockerClient) GetContainers() (Containers, error) {
 	var containers Containers
 	results, err := d.client.ListContainers(docker.ListContainersOptions{All: true})
@@ -44,13 +54,10 @@ func (d DockerClient) GetContainers() (Containers, error) {
 	}
 
 	for _, r := range results {
-		inspect, err := d.client.InspectContainer(r.ID)
+		c, err := d.FindContainer(r.ID)
 		if err != nil {
-			log.Fatal(err)
 			return containers, err
 		}
-		c := &Container{}
-		c.init(inspect)
 		containers = append(containers, c)
 	}
 
