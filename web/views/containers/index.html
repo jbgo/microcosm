@@ -4,31 +4,34 @@
       <th>State</th>
       <th>ID</th>
       <th>Name</th>
+      <th>Labels</th>
       <th>Command</th>
     </tr>
   </thead>
 
   <tbody>
     <tr>
-      <th colspan="4">Running</th>
+      <th colspan="5">Running</th>
     </tr>
     {{range .Running}}
       <tr>
         <td>{{.State}}</td>
         <td><a href="/containers/{{.ID}}">{{truncate .ID 12}}</a></td>
         <td>{{.Name|noslash}}</td>
+        <td>{{.Labels}}</td>
         <td>{{.Original.Path}} {{join .Original.Args " "}}</td>
       </tr>
     {{end}}
 
     <tr>
-      <th colspan="4">Not Running</th>
+      <th colspan="5">Not Running</th>
     </tr>
     {{range .NotRunning}}
       <tr>
         <td>{{.State}}</td>
         <td><a href="/containers/{{.ID}}">{{truncate .ID 12}}</a></td>
         <td>{{.Name|noslash}}</td>
+        <td>{{.Labels}}</td>
         <td>{{.Original.Path}} {{join .Original.Args " "}}</td>
       </tr>
     {{end}}
