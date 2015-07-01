@@ -7,7 +7,7 @@ import (
 )
 
 type DockerClient struct {
-	client *docker.Client
+	Client *docker.Client
 }
 
 func New() (DockerClient, error) {
@@ -18,11 +18,11 @@ func New() (DockerClient, error) {
 	key := fmt.Sprintf("%s/key.pem", path)
 
 	client, err := docker.NewTLSClient(endpoint, cert, key, ca)
-	return DockerClient{client: client}, err
+	return DockerClient{Client: client}, err
 }
 
 func Version(d DockerClient) (map[string]string, error) {
-	env, err := d.client.Version()
+	env, err := d.Client.Version()
 	if err != nil {
 		return nil, err
 	} else {

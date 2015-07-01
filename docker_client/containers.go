@@ -46,7 +46,7 @@ func (c *Container) init(d *docker.Container) {
 
 func (d DockerClient) FindContainer(containerID string) (*Container, error) {
 	c := &Container{}
-	inspect, err := d.client.InspectContainer(containerID)
+	inspect, err := d.Client.InspectContainer(containerID)
 	if err != nil {
 		return c, err
 	}
@@ -56,7 +56,7 @@ func (d DockerClient) FindContainer(containerID string) (*Container, error) {
 
 func (d DockerClient) GetContainers() (Containers, error) {
 	var containers Containers
-	results, err := d.client.ListContainers(docker.ListContainersOptions{All: true})
+	results, err := d.Client.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
 		log.Fatal(err)
 		return containers, err
@@ -83,7 +83,7 @@ func (d DockerClient) FindContainerWithLabel(label string) (*Container, error) {
 		Filters: filters,
 	}
 
-	results, err := d.client.ListContainers(opts)
+	results, err := d.Client.ListContainers(opts)
 	if err != nil {
 		return nil, err
 	} else if len(results) > 0 {
@@ -131,7 +131,7 @@ func (d DockerClient) CreateContainer(image string, labels map[string]string, cm
 		Config: &conf,
 	}
 
-	result, err := d.client.CreateContainer(opts)
+	result, err := d.Client.CreateContainer(opts)
 	if err != nil {
 		return nil, err
 	}
@@ -141,5 +141,5 @@ func (d DockerClient) CreateContainer(image string, labels map[string]string, cm
 
 func (d DockerClient) StartContainer(container *Container) error {
 	hostConfig := docker.HostConfig{}
-	return d.client.StartContainer(container.ID, &hostConfig)
+	return d.Client.StartContainer(container.ID, &hostConfig)
 }
