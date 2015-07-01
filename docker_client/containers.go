@@ -1,8 +1,6 @@
 package docker_client
 
 import (
-	"bytes"
-	"fmt"
 	"github.com/fsouza/go-dockerclient"
 	"log"
 	"sort"
@@ -14,7 +12,7 @@ type Container struct {
 	Name     string
 	Image    string
 	Command  string
-	Labels   string
+	Labels   map[string]string
 	Original *docker.Container
 }
 
@@ -37,11 +35,7 @@ func (c *Container) init(d *docker.Container) {
 		c.State = "stopped"
 	}
 
-	labelBuffer := bytes.NewBufferString("")
-	for k, v := range d.Config.Labels {
-		labelBuffer.WriteString(fmt.Sprintf("%s=%s ", k, v))
-	}
-	c.Labels = labelBuffer.String()
+	c.Labels = d.Config.Labels
 }
 
 func (d DockerClient) FindContainer(containerID string) (*Container, error) {
