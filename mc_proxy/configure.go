@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/jbgo/mission_control/docker_client"
+	// "io/ioutil"
 	"log"
 	"text/template"
 )
@@ -23,12 +24,13 @@ func groupContainersByService(containers []*docker_client.Container) map[string]
 	return groups
 }
 
-func generateHaproxyConfig(serviceGroups map[string][]*docker_client.Container) string {
+func generateHaproxyConfig(serviceGroups map[string][]*docker_client.Container) bytes.Buffer {
 	var buffer bytes.Buffer
 	templatePath := "/go/src/app/haproxy.cfg.template"
+	// templatePath := "/Users/jordan/projects/gocode/src/github.com/jbgo/mission_control/mc_proxy/haproxy.cfg.template"
 	cfg := template.Must(template.ParseFiles(templatePath))
 	cfg.ExecuteTemplate(&buffer, "haproxy.cfg.template", serviceGroups)
-	return buffer.String()
+	return buffer
 }
 
 // func generateProxyConfigs(client *DockerClient, proxyContainer, webContainers []*Container) {
@@ -45,9 +47,22 @@ func main() {
 
 	serviceGroups := groupContainersByService(webContainers)
 	haproxyConfig := generateHaproxyConfig(serviceGroups)
-	fmt.Println(haproxyConfig)
-	// TODO write config to file
-	// TODO restart mc_proxy
+	fmt.Println(haproxyConfig.String())
+	err = ioutil.WriteFile("/usr/local/etc/haproxy/haproxy.cfg", haproxyConfig.Bytes(), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	//TODO restart haproxy
+	proxyContainer, err := client.FindContainerWithLabel("service=mc_proxy")
+	if err != nil {
+		log.Fatal(err)
+	} else if proxyContainer == nil {
+		log.Fatalf("[mc_proxy] could not find container labeled service=mc_proxy")
+	}
+
+	log.Println("[mc_proxy] restarting mc_proxy")
+	err = client.RestartContainer(proxyContainer)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

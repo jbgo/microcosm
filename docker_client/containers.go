@@ -134,22 +134,30 @@ func (containers Containers) NotRunning() Containers {
 }
 
 type ContainerConfig struct {
-	Image   string
-	Labels  map[string]string
-	Cmd     []string
-	Volumes map[string]struct{}
+	Image       string
+	Labels      map[string]string
+	Cmd         []string
+	Volumes     map[string]struct{}
+	NetworkMode string
+	PortSpecs   []string
 }
 
 func (d DockerClient) CreateContainer(containerConf *ContainerConfig) (*Container, error) {
 	conf := docker.Config{
-		Cmd:     containerConf.Cmd,
-		Image:   containerConf.Image,
-		Labels:  containerConf.Labels,
-		Volumes: containerConf.Volumes,
+		Cmd:       containerConf.Cmd,
+		Image:     containerConf.Image,
+		Labels:    containerConf.Labels,
+		Volumes:   containerConf.Volumes,
+		PortSpecs: containerConf.PortSpecs,
+	}
+
+	hostConf := docker.HostConfig{
+		NetworkMode: containerConf.NetworkMode,
 	}
 
 	opts := docker.CreateContainerOptions{
-		Config: &conf,
+		Config:     &conf,
+		HostConfig: &hostConf,
 	}
 
 	result, err := d.Client.CreateContainer(opts)
@@ -163,4 +171,12 @@ func (d DockerClient) CreateContainer(containerConf *ContainerConfig) (*Containe
 func (d DockerClient) StartContainer(container *Container) error {
 	hostConf := docker.HostConfig{}
 	return d.Client.StartContainer(container.ID, &hostConf)
+}
+
+func (d DockerClient) RestartContainer(container *Container) error {
+	if container.State == "running" {
+		return d.Client.RestartContainer(container.ID, 30)
+	} else {
+		return d.StartContainer(container)
+	}
 }

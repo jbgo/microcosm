@@ -33,10 +33,14 @@ func Bootstrap() error {
 		return err
 	}
 
+	// TODO empty but working config file
+	// TODO need to add options: --net=host -p 80:80
 	proxyConf := docker_client.ContainerConfig{
-		Image:   "haproxy:1.5",
-		Labels:  map[string]string{"service": "mc_proxy", "service_type": "proxy"},
-		Volumes: map[string]struct{}{"/usr/local/etc/haproxy": struct{}{}},
+		Image:       "haproxy:1.5",
+		Labels:      map[string]string{"service": "mc_proxy", "service_type": "proxy"},
+		Volumes:     map[string]struct{}{"/usr/local/etc/haproxy": struct{}{}},
+		NetworkMode: "host",
+		PortSpecs:   []string{"80:80"},
 	}
 	err = startService(&client, &proxyConf)
 	if err != nil {
