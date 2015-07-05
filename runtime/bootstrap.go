@@ -5,12 +5,6 @@ import (
 	"github.com/jbgo/mission_control/docker_client"
 )
 
-type ServiceConf struct {
-	Cmd    []string
-	Image  string
-	Labels map[string]string
-}
-
 func Bootstrap() error {
 	fmt.Println("[mc_admin] checking for existence of required services")
 
@@ -19,30 +13,30 @@ func Bootstrap() error {
 		return err
 	}
 
-	storageConf := ServiceConf{
+	storageConf := docker_client.ContainerConfig{
 		Cmd:    []string{"sleep", "90"},
 		Image:  "debian:wheezy",
-		Labels: map[string]string{"service": "mc_storage"},
+		Labels: map[string]string{"service": "mc_storage", "service_type": "persistence"},
 	}
 	err = startService(&client, &storageConf)
 	if err != nil {
 		return err
 	}
 
-	agentConf := ServiceConf{
+	agentConf := docker_client.ContainerConfig{
 		Cmd:    []string{"sleep", "90"},
 		Image:  "debian:wheezy",
-		Labels: map[string]string{"service": "mc_agent"},
+		Labels: map[string]string{"service": "mc_agent", "service_type": "daemon"},
 	}
 	err = startService(&client, &agentConf)
 	if err != nil {
 		return err
 	}
 
-	proxyConf := ServiceConf{
-		Cmd:    []string{"sleep", "90"},
-		Image:  "debian:wheezy",
-		Labels: map[string]string{"service": "mc_proxy"},
+	proxyConf := docker_client.ContainerConfig{
+		Image:   "haproxy:1.5",
+		Labels:  map[string]string{"service": "mc_proxy", "service_type": "proxy"},
+		Volumes: map[string]struct{}{"/usr/local/etc/haproxy": struct{}{}},
 	}
 	err = startService(&client, &proxyConf)
 	if err != nil {
@@ -52,7 +46,7 @@ func Bootstrap() error {
 	return nil
 }
 
-func startService(client *docker_client.DockerClient, conf *ServiceConf) error {
+func startService(client *docker_client.DockerClient, conf *docker_client.ContainerConfig) error {
 	container, err := client.FindContainerWithLabel("service=" + conf.Labels["service"])
 	if err != nil {
 		return err
@@ -61,7 +55,7 @@ func startService(client *docker_client.DockerClient, conf *ServiceConf) error {
 	if container == nil {
 		fmt.Printf("[mc_admin] %s service not found\n", conf.Labels["service"])
 		fmt.Printf("[mc_admin] creating %s service\n", conf.Labels["service"])
-		container, err = client.CreateContainer(conf.Image, conf.Labels, conf.Cmd)
+		container, err = client.CreateContainer(conf)
 		if err != nil {
 			return err
 		} else {

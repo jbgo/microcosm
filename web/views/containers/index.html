@@ -2,37 +2,43 @@
   <thead>
     <tr>
       <th>State</th>
+      <th>Service</th>
+      <th>Type</th>
+      <th>Ports</th>
+      <th>Command</th>
       <th>ID</th>
       <th>Name</th>
-      <th>Labels</th>
-      <th>Command</th>
     </tr>
   </thead>
 
   <tbody>
     <tr>
-      <th colspan="5">Running</th>
+      <th colspan="7">Active</th>
     </tr>
     {{range .Running}}
       <tr>
         <td>{{.State}}</td>
-        <td><a href="/containers/{{.ID}}">{{truncate .ID 12}}</a></td>
-        <td>{{.Name|noslash}}</td>
-        <td>{{range $k, $v := .Labels}}{{$k}}={{$v}} {{end}}</td>
+        <td>{{.Labels.service}}</td>
+        <td>{{.Labels.service_type}}</td>
+        <td></td>
         <td>{{.Original.Path}} {{join .Original.Args " "}}</td>
+        <td><a href="/containers/{{.ID}}">{{truncate .ID 8}}</a></td>
+        <td>{{.Name|noslash}}</td>
       </tr>
     {{end}}
 
     <tr>
-      <th colspan="5">Not Running</th>
+      <th colspan="7">Inactive</th>
     </tr>
     {{range .NotRunning}}
       <tr>
         <td>{{.State}}</td>
-        <td><a href="/containers/{{.ID}}">{{truncate .ID 12}}</a></td>
-        <td>{{.Name|noslash}}</td>
-        <td>{{range $k, $v := .Labels}}{{$k}}={{$v}} {{end}}</td>
+        <td>{{.Labels.service}}</td>
+        <td>{{.Labels.service_type}}</td>
+        <td></td>
         <td>{{.Original.Path}} {{join .Original.Args " "}}</td>
+        <td><a href="/containers/{{.ID}}">{{truncate .ID 8}}</a></td>
+        <td>{{.Name|noslash}}</td>
       </tr>
     {{end}}
   </tbody>

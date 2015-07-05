@@ -13,6 +13,8 @@ type Container struct {
 	Image    string
 	Command  string
 	Labels   map[string]string
+	HostIP   string
+	HostPort string
 	Original *docker.Container
 }
 
@@ -67,22 +69,39 @@ func (d DockerClient) GetContainers() (Containers, error) {
 	return containers, err
 }
 
-func (d DockerClient) FindContainerWithLabel(label string) (*Container, error) {
+func (d DockerClient) FindContainersWithLabel(label string) ([]*Container, error) {
 	filters := make(map[string][]string)
 	filters["label"] = []string{label}
 
 	opts := docker.ListContainersOptions{
 		All:     true,
-		Limit:   1,
 		Filters: filters,
 	}
 
 	results, err := d.Client.ListContainers(opts)
 	if err != nil {
 		return nil, err
-	} else if len(results) > 0 {
-		container, err := d.FindContainer(results[0].ID)
-		return container, err
+	} else {
+		containers := make([]*Container, len(results))
+		for i, r := range results {
+			c, err := d.FindContainer(r.ID)
+			if err != nil {
+				return nil, err
+			}
+			containers[i] = c
+		}
+		return containers, nil
+	}
+}
+
+func (d DockerClient) FindContainerWithLabel(label string) (*Container, error) {
+	containers, err := d.FindContainersWithLabel(label)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(containers) > 0 {
+		return containers[0], nil
 	} else {
 		return nil, nil
 	}
@@ -114,11 +133,19 @@ func (containers Containers) NotRunning() Containers {
 	return notRunning
 }
 
-func (d DockerClient) CreateContainer(image string, labels map[string]string, cmd []string) (*Container, error) {
+type ContainerConfig struct {
+	Image   string
+	Labels  map[string]string
+	Cmd     []string
+	Volumes map[string]struct{}
+}
+
+func (d DockerClient) CreateContainer(containerConf *ContainerConfig) (*Container, error) {
 	conf := docker.Config{
-		Cmd:    cmd,
-		Image:  image,
-		Labels: labels,
+		Cmd:     containerConf.Cmd,
+		Image:   containerConf.Image,
+		Labels:  containerConf.Labels,
+		Volumes: containerConf.Volumes,
 	}
 
 	opts := docker.CreateContainerOptions{
@@ -134,6 +161,6 @@ func (d DockerClient) CreateContainer(image string, labels map[string]string, cm
 }
 
 func (d DockerClient) StartContainer(container *Container) error {
-	hostConfig := docker.HostConfig{}
-	return d.Client.StartContainer(container.ID, &hostConfig)
+	hostConf := docker.HostConfig{}
+	return d.Client.StartContainer(container.ID, &hostConf)
 }
