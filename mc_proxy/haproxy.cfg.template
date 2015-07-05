@@ -1,0 +1,29 @@
+global
+    log 127.0.0.1 local0
+    log 127.0.0.1 local1 notice
+
+defaults
+    log global
+    mode http
+    option httplog
+    option forwardfor
+    timeout connect 5000ms
+    timeout client 20000ms
+    timeout server 20000ms
+
+frontend http-in
+    bind *:80
+    default_backend mission_control
+
+    acl host_mission_control hdr(host) -i mission-control.docker
+    use_backend mission_control if host_mission_control
+    {{range $service, $containers := .}}
+    acl host_{{$service}} hdr(host) -i {{$service}}.docker
+    use_backend {{$service}} if host_{{$service}}
+    {{end}}
+
+{{range $service, $containers := .}}
+backend {{$service}}
+    {{range $i, $c := .}}server {{$service}}_{{$i}} {{$c.HostIP}}:{{$c.HostPort}}
+    {{end}}
+{{end}}
