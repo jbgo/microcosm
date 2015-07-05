@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"fmt"
+	"github.com/fsouza/go-dockerclient"
 	"github.com/jbgo/mission_control/docker_client"
 )
 
@@ -36,11 +37,13 @@ func Bootstrap() error {
 	// TODO empty but working config file
 	// TODO need to add options: --net=host -p 80:80
 	proxyConf := docker_client.ContainerConfig{
-		Image:       "haproxy:1.5",
-		Labels:      map[string]string{"service": "mc_proxy", "service_type": "proxy"},
-		Volumes:     map[string]struct{}{"/usr/local/etc/haproxy": struct{}{}},
-		NetworkMode: "host",
-		PortSpecs:   []string{"80:80"},
+		Image:        "haproxy:1.5",
+		Labels:       map[string]string{"service": "mc_proxy", "service_type": "proxy"},
+		Volumes:      map[string]struct{}{"/usr/local/etc/haproxy": struct{}{}},
+		NetworkMode:  "host",
+		PortSpecs:    []string{":80:80"},
+		Name:         "mc_haproxy",
+		PortBindings: map[docker.Port][]docker.PortBinding{"80/tcp": []docker.PortBinding{docker.PortBinding{HostPort: "80/tcp"}}},
 	}
 	err = startService(&client, &proxyConf)
 	if err != nil {
@@ -71,7 +74,7 @@ func startService(client *docker_client.DockerClient, conf *docker_client.Contai
 
 	if container.State != "running" {
 		fmt.Printf("[mc_admin] %s service not started\n", conf.Labels["service"])
-		err = client.StartContainer(container)
+		err = client.StartContainer(container, conf)
 		if err != nil {
 			return err
 		} else {

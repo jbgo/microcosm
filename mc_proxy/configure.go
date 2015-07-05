@@ -1,12 +1,10 @@
 package main
 
-// package proxy
-
 import (
 	"bytes"
 	"fmt"
 	"github.com/jbgo/mission_control/docker_client"
-	// "io/ioutil"
+	"io/ioutil"
 	"log"
 	"text/template"
 )
@@ -53,16 +51,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	proxyContainer, err := client.FindContainerWithLabel("service=mc_proxy")
-	if err != nil {
-		log.Fatal(err)
-	} else if proxyContainer == nil {
-		log.Fatalf("[mc_proxy] could not find container labeled service=mc_proxy")
-	}
+	// proxyContainer, err := client.FindContainerWithLabel("service=mc_proxy")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// } else if proxyContainer == nil {
+	// 	log.Fatalf("[mc_proxy] could not find container labeled service=mc_proxy")
+	// }
 
-	log.Println("[mc_proxy] restarting mc_proxy")
-	err = client.RestartContainer(proxyContainer)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// log.Println("[mc_proxy] restarting mc_proxy")
+	// err = client.RestartContainer(proxyContainer)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 }

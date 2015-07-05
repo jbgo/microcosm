@@ -13,10 +13,6 @@ defaults
 
 frontend http-in
     bind *:80
-    default_backend mission_control
-
-    acl host_mission_control hdr(host) -i mission-control.docker
-    use_backend mission_control if host_mission_control
     {{range $service, $containers := .}}
     acl host_{{$service}} hdr(host) -i {{$service}}.docker
     use_backend {{$service}} if host_{{$service}}
