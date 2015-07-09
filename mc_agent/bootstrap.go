@@ -51,7 +51,7 @@ func bootstrap(client *docker.DockerClient) error {
 
 	// TODO find configure image or build if not found
 
-	// reconfigure haproxy
+	// reconfigure nginx
 	err = reconfigure(client, dataContainerId)
 	if err != nil {
 		return err
@@ -71,16 +71,16 @@ func bootstrap(client *docker.DockerClient) error {
 
 func createDataContainer(client *docker.DockerClient) (string, error) {
 	containerConfig := &docker.ContainerConfig{
-		Image:   "haproxy:1.5",
+		Image:   "nginx",
 		Labels:  map[string]string{"service": "mc_proxy", "service_type": "data-container"},
-		Volumes: map[string]struct{}{"/usr/local/etc/haproxy": struct{}{}},
+		Volumes: map[string]struct{}{"/etc/nginx": struct{}{}},
 	}
 	return client.CreateContainer(containerConfig, "mc_proxy_data")
 }
 
 func createProxyContainer(client *docker.DockerClient, dataContainerId string, hostConfig docker.HostConfig) (string, error) {
 	containerConfig := &docker.ContainerConfig{
-		Image:      "haproxy:1.5",
+		Image:      "nginx",
 		Labels:     map[string]string{"service": "mc_proxy", "service_type": "reverse-proxy"},
 		HostConfig: hostConfig,
 	}
@@ -95,18 +95,18 @@ func reconfigure(client *docker.DockerClient, dataContainerId string) error {
 	}
 
 	containerConfig := &docker.ContainerConfig{
-		Image:      "mc_proxy",
+		Image:      "mc_reconfigure_proxy",
 		Env:        []string{"DOCKER_HOST=unix:///var/run/docker.sock"},
 		HostConfig: hostConfig,
 	}
 
-	fmt.Println("[mc_agent] creating container to reconfigure haproxy")
+	fmt.Println("[mc_agent] creating container to reconfigure nginx")
 	containerId, err := client.CreateContainer(containerConfig, "tmp_mc_proxy")
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("[mc_agent] reconfiguring haproxy")
+	fmt.Println("[mc_agent] reconfiguring nginx")
 	err = client.StartContainer(containerId, &hostConfig)
 
 	// wait for reconfigure to complete before removing container
