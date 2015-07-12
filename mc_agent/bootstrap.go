@@ -2,50 +2,52 @@ package main
 
 import (
 	"fmt"
-	docker "github.com/samalba/dockerclient"
-	"net/url"
+	"github.com/fsouza/go-dockerclient"
 	"time"
 )
 
-func bootstrap(client *docker.DockerClient) error {
-	filters := url.QueryEscape(`{"label":["service=mc_proxy", "service_type=data-container"]}`)
-	containers, err := client.ListContainers(true, false, filters)
+func bootstrap(client *docker.Client) error {
+	opts := docker.ListContainersOptions{
+		All:     true,
+		Filters: map[string][]string{"label": []string{"service=mc_proxy", "service_type=data-container"}},
+	}
+	containers, err := client.ListContainers(opts)
 	if err != nil {
 		return err
 	}
 
 	var dataContainerId string
 	if len(containers) > 0 {
-		dataContainerId = containers[0].Id
-		fmt.Printf("[mc_agent] found mc_proxy_data data container: %s\n", dataContainerId)
+		dataContainerId = containers[0].ID
+		fmt.Printf("[mc_agent] found mc_proxy_data container: %s\n", dataContainerId)
 	} else {
-		dataContainerId, err = createDataContainer(client)
+		dataContainer, err := createDataContainer(client)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("[mc_agent] created mc_proxy_data data container: %s\n", dataContainerId)
+		dataContainerId = dataContainer.ID
+		fmt.Printf("[mc_agent] created mc_proxy_data container: %s\n", dataContainerId)
 	}
 
-	filters = url.QueryEscape(`{"label":["service=mc_proxy", "service_type=reverse-proxy"]}`)
-	containers, err = client.ListContainers(true, false, filters)
+	opts = docker.ListContainersOptions{
+		All:     true,
+		Filters: map[string][]string{"label": []string{"service=mc_proxy", "service_type=reverse-proxy"}},
+	}
+	containers, err = client.ListContainers(opts)
 	if err != nil {
 		return err
 	}
 
-	proxyHostConfig := docker.HostConfig{
-		NetworkMode: "host",
-		VolumesFrom: []string{dataContainerId},
-	}
-
 	var proxyContainerId string
 	if len(containers) > 0 {
-		proxyContainerId = containers[0].Id
+		proxyContainerId = containers[0].ID
 		fmt.Printf("[mc_agent] found mc_proxy container: %s\n", proxyContainerId)
 	} else {
-		proxyContainerId, err = createProxyContainer(client, dataContainerId, proxyHostConfig)
+		proxyContainer, err := createProxyContainer(client, dataContainerId)
 		if err != nil {
 			return err
 		}
+		proxyContainerId = proxyContainer.ID
 		fmt.Printf("[mc_agent] created mc_proxy container: %s\n", proxyContainerId)
 	}
 
@@ -58,60 +60,73 @@ func bootstrap(client *docker.DockerClient) error {
 	}
 
 	proxyInfo, err := client.InspectContainer(proxyContainerId)
+	fmt.Printf("proxyInfo: %v\n", proxyInfo)
 	if err != nil {
 		return err
 	}
 
 	if proxyInfo.State.Running {
+		fmt.Println("[mc_agent] restarting mc_proxy")
 		return client.RestartContainer(proxyContainerId, 60)
 	} else {
-		return client.StartContainer(proxyContainerId, &proxyHostConfig)
+		fmt.Println("[mc_agent] starting mc_proxy")
+		return client.StartContainer(proxyContainerId, proxyInfo.HostConfig)
 	}
 }
 
-func createDataContainer(client *docker.DockerClient) (string, error) {
-	containerConfig := &docker.ContainerConfig{
-		Image:   "nginx",
-		Labels:  map[string]string{"service": "mc_proxy", "service_type": "data-container"},
-		Volumes: map[string]struct{}{"/etc/nginx": struct{}{}},
+func createDataContainer(client *docker.Client) (*docker.Container, error) {
+	opts := docker.CreateContainerOptions{
+		Name: "mc_proxy_data",
+		Config: &docker.Config{
+			Image:   "nginx",
+			Labels:  map[string]string{"service": "mc_proxy", "service_type": "data-container"},
+			Volumes: map[string]struct{}{"/etc/nginx": struct{}{}},
+		},
 	}
-	return client.CreateContainer(containerConfig, "mc_proxy_data")
+	return client.CreateContainer(opts)
 }
 
-func createProxyContainer(client *docker.DockerClient, dataContainerId string, hostConfig docker.HostConfig) (string, error) {
-	containerConfig := &docker.ContainerConfig{
-		Image:      "nginx",
-		Labels:     map[string]string{"service": "mc_proxy", "service_type": "reverse-proxy"},
-		HostConfig: hostConfig,
+func createProxyContainer(client *docker.Client, dataContainerId string) (*docker.Container, error) {
+	opts := docker.CreateContainerOptions{
+		Name: "mc_proxy",
+		Config: &docker.Config{
+			Image:  "nginx",
+			Labels: map[string]string{"service": "mc_proxy", "service_type": "reverse-proxy"},
+		},
+		HostConfig: &docker.HostConfig{
+			NetworkMode: "host",
+			VolumesFrom: []string{dataContainerId},
+		},
 	}
-	return client.CreateContainer(containerConfig, "mc_proxy")
+	return client.CreateContainer(opts)
 }
 
 // docker run --rm -it -e DOCKER_HOST=unix:///var/run/docker.sock -v /var/run/docker.sock:/var/run/docker.sock --volumes-from=mc_proxy_data mc_proxy
-func reconfigure(client *docker.DockerClient, dataContainerId string) error {
-	hostConfig := docker.HostConfig{
-		Binds:       []string{"/var/run/docker.sock:/var/run/docker.sock"},
-		VolumesFrom: []string{"mc_proxy_data"},
-	}
-
-	containerConfig := &docker.ContainerConfig{
-		Image:      "mc_reconfigure_proxy",
-		Env:        []string{"DOCKER_HOST=unix:///var/run/docker.sock"},
-		HostConfig: hostConfig,
+func reconfigure(client *docker.Client, dataContainerId string) error {
+	opts := docker.CreateContainerOptions{
+		Config: &docker.Config{
+			Image: "mc_reconfigure_proxy",
+			Env:   []string{"DOCKER_HOST=unix:///var/run/docker.sock"},
+		},
+		HostConfig: &docker.HostConfig{
+			Binds:       []string{"/var/run/docker.sock:/var/run/docker.sock"},
+			VolumesFrom: []string{"mc_proxy_data"},
+		},
 	}
 
 	fmt.Println("[mc_agent] creating container to reconfigure nginx")
-	containerId, err := client.CreateContainer(containerConfig, "tmp_mc_proxy")
+	container, err := client.CreateContainer(opts)
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("[mc_agent] reconfiguring nginx")
-	err = client.StartContainer(containerId, &hostConfig)
+	err = client.StartContainer(container.ID, container.HostConfig)
 
-	// wait for reconfigure to complete before removing container
+	// TODO we should actually poll for status or use some other method to
+	// actually verify the task completes before removing the container.
 	time.Sleep(1 * time.Second)
-	client.RemoveContainer(containerId, false, false)
+	client.RemoveContainer(docker.RemoveContainerOptions{ID: container.ID})
 
 	return err
 }
