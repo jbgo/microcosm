@@ -7,33 +7,16 @@ import (
 )
 
 func bootstrap(client *docker.Client) error {
-	opts := docker.ListContainersOptions{
-		All:     true,
-		Filters: map[string][]string{"label": []string{"service=mc_proxy", "service_type=data-container"}},
-	}
-	containers, err := client.ListContainers(opts)
+	dataContainerId, err := findOrCreateDataContainer(client)
 	if err != nil {
 		return err
 	}
 
-	var dataContainerId string
-	if len(containers) > 0 {
-		dataContainerId = containers[0].ID
-		fmt.Printf("[mc_agent] found mc_proxy_data container: %s\n", dataContainerId)
-	} else {
-		dataContainer, err := createDataContainer(client)
-		if err != nil {
-			return err
-		}
-		dataContainerId = dataContainer.ID
-		fmt.Printf("[mc_agent] created mc_proxy_data container: %s\n", dataContainerId)
-	}
-
-	opts = docker.ListContainersOptions{
+	opts := docker.ListContainersOptions{
 		All:     true,
 		Filters: map[string][]string{"label": []string{"service=mc_proxy", "service_type=reverse-proxy"}},
 	}
-	containers, err = client.ListContainers(opts)
+	containers, err := client.ListContainers(opts)
 	if err != nil {
 		return err
 	}
@@ -60,7 +43,6 @@ func bootstrap(client *docker.Client) error {
 	}
 
 	proxyInfo, err := client.InspectContainer(proxyContainerId)
-	fmt.Printf("proxyInfo: %v\n", proxyInfo)
 	if err != nil {
 		return err
 	}
@@ -72,6 +54,32 @@ func bootstrap(client *docker.Client) error {
 		fmt.Println("[mc_agent] starting mc_proxy")
 		return client.StartContainer(proxyContainerId, proxyInfo.HostConfig)
 	}
+}
+
+func findOrCreateDataContainer(client *docker.Client) (string, error) {
+	opts := docker.ListContainersOptions{
+		All:     true,
+		Filters: map[string][]string{"label": []string{"service=mc_proxy", "service_type=data-container"}},
+	}
+	containers, err := client.ListContainers(opts)
+	if err != nil {
+		return "", err
+	}
+
+	var dataContainerId string
+	if len(containers) > 0 {
+		dataContainerId = containers[0].ID
+		fmt.Printf("[mc_agent] found mc_proxy_data container: %s\n", dataContainerId)
+	} else {
+		dataContainer, err := createDataContainer(client)
+		if err != nil {
+			return "", err
+		}
+		dataContainerId = dataContainer.ID
+		fmt.Printf("[mc_agent] created mc_proxy_data container: %s\n", dataContainerId)
+	}
+
+	return dataContainerId, nil
 }
 
 func createDataContainer(client *docker.Client) (*docker.Container, error) {
