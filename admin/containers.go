@@ -1,19 +1,19 @@
-package web
+package admin
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/jbgo/mission_control/docker_client"
+	"github.com/jbgo/microcosm/dockerclient"
 	"log"
 	"net/http"
 )
 
 type ContainerOverview struct {
-	Running    docker_client.Containers
-	NotRunning docker_client.Containers
+	Running    dockerclient.Containers
+	NotRunning dockerclient.Containers
 }
 
 func (app WebApp) ListContainers(w http.ResponseWriter, r *http.Request) {
-	client, err := docker_client.New()
+	client, err := dockerclient.NewSimpleClient()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,7 +32,7 @@ func (app WebApp) ListContainers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app WebApp) ShowContainer(w http.ResponseWriter, r *http.Request) {
-	client, err := docker_client.New()
+	client, err := dockerclient.NewSimpleClient()
 	if err != nil {
 		log.Fatal(err)
 	}

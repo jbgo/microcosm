@@ -1,4 +1,4 @@
-package docker_client
+package dockerclient
 
 type ByAge Containers
 

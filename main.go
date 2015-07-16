@@ -1,16 +1,10 @@
 package main
 
 import (
-	"github.com/jbgo/mission_control/runtime"
-	"github.com/jbgo/mission_control/web"
+	"github.com/jbgo/microcosm/admin"
 	"log"
 )
 
 func main() {
-	err := runtime.Bootstrap()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	web.Serve(":8001")
+	admin.Serve(":8001")
 }

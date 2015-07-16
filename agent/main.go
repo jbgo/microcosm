@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	docker "github.com/fsouza/go-dockerclient"
-	"github.com/jbgo/mission_control/dockerclient"
+	"github.com/jbgo/microcosm/dockerclient"
 	"log"
 )
 
