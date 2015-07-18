@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/jbgo/microcosm/admin"
-	"log"
 )
 
 func main() {

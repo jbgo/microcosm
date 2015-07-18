@@ -16,7 +16,6 @@ https://godoc.org/github.com/fsouza/go-dockerclient
 package dockerclient
 
 import (
-	"fmt"
 	docker "github.com/fsouza/go-dockerclient"
 	"os"
 	"path"
