@@ -7,7 +7,7 @@ Vagrant.configure(2) do |config|
   config.vm.network "private_network", ip: "192.168.33.33"
   config.vm.synced_folder "./", "/home/vagrant/go/src/github.com/jbgo/microcosm", owner: "vagrant"
   config.vm.provider "virtualbox" do |vb|
-    vb.memory = "2048"
+    vb.memory = "3192"
   end
 
   config.vm.provision "shell", path: "provision.sh"

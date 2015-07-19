@@ -18,7 +18,7 @@
     {{range .Running}}
       <tr>
         <td>{{.State}}</td>
-        <td>{{.Labels.service}}</td>
+        <td>{{.Labels|printmap}}</td>
         <td>{{.Labels.service_type}}</td>
         <td></td>
         <td>{{.Original.Path}} {{join .Original.Args " "}}</td>

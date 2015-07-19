@@ -2,6 +2,7 @@ package admin
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"net/http"
 	"path"
@@ -12,6 +13,7 @@ var templateFuncs = template.FuncMap{
 	"join":     strings.Join,
 	"noslash":  func(s string) string { return s[1:] },
 	"truncate": func(s string, length int) string { return s[0:length] },
+	"printmap": printMap,
 }
 
 type LayoutData struct {
@@ -31,4 +33,8 @@ func (app WebApp) RenderHTML(w http.ResponseWriter, layout, view string, data in
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	layoutTemplate.ExecuteTemplate(w, path.Base(layoutPath), layoutData)
+}
+
+func printMap(data map[string]string) string {
+	return fmt.Sprintf("%s=%s %s=%s", "service", data["microcosm.service"], "type", data["microcosm.type"])
 }
