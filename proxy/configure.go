@@ -7,6 +7,8 @@ import (
 	"github.com/jbgo/microcosm/dockerclient"
 	"io/ioutil"
 	"log"
+	"path"
+	"runtime"
 	"text/template"
 )
 
@@ -26,7 +28,7 @@ func groupContainersByService(client *docker.Client, containers []docker.APICont
 		}
 
 		inspect, _ := client.InspectContainer(c.ID)
-		service := inspect.Config.Labels["service"]
+		service := inspect.Config.Labels["microcosm.service"]
 
 		list, _ := groups[service]
 		groups[service] = append(list, info)
@@ -35,9 +37,14 @@ func groupContainersByService(client *docker.Client, containers []docker.APICont
 	return groups
 }
 
+func findTemplatePath(template string) string {
+	_, filename, _, _ := runtime.Caller(0)
+	return path.Join(path.Dir(filename), template)
+}
+
 func generateNginxConfig(serviceGroups map[string][]*ContainerInfo) bytes.Buffer {
 	var buffer bytes.Buffer
-	templatePath := "/go/src/app/nginx.conf.template"
+	templatePath := findTemplatePath("nginx.conf.template")
 	cfg := template.Must(template.ParseFiles(templatePath))
 	cfg.ExecuteTemplate(&buffer, "nginx.conf.template", serviceGroups)
 	return buffer
@@ -51,7 +58,7 @@ func main() {
 
 	webContainers, err := client.ListContainers(docker.ListContainersOptions{
 		All:     false,
-		Filters: map[string][]string{"label": []string{"service_type=web"}},
+		Filters: map[string][]string{"label": []string{"microcosm.type=web"}},
 	})
 	if err != nil {
 		log.Fatal(err)

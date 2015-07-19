@@ -2,6 +2,10 @@
 
 set -e
 
+# TODO handle this in agent bootstrap
+# echo '===== pulling base images ====='
+# docker pull nginx
+
 echo '===== build image: microcosm/base ====='
 docker build -t microcosm/base:latest .
 
@@ -16,6 +20,7 @@ docker create --name=microcosm-code \
   -v /home/vagrant/go/src/github.com/jbgo/microcosm:/go/src/github.com/jbgo/microcosm \
   microcosm/base
 
+# TODO handle this in agent bootstrap
 echo '===== create container: microcosm-configure-proxy ====='
 docker create --name=microcosm-configure-proxy \
   -e DOCKER_HOST=unix:///var/run/docker.sock \

@@ -1,3 +1,5 @@
 FROM microcosm/base
 WORKDIR /go/src/github.com/jbgo/microcosm/proxy
-CMD ["go", "run", "*.go"]
+ADD entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["sh", "-c", "/entrypoint.sh"]

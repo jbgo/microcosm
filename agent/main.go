@@ -16,11 +16,11 @@ func handleEvent(msg *docker.APIEvents) {
 
 	container, err := client.InspectContainer(msg.ID)
 	if err != nil {
-		fmt.Errorf("[mc_agent] failed to inspect container %s. %v\n", msg.ID, err)
+		fmt.Errorf("[agent] failed to inspect container %s. %v\n", msg.ID, err)
 		return
 	}
 
-	fmt.Printf("[mc_agent][%s] %s %s\n", msg.Status, container.Name, msg.ID[0:12])
+	fmt.Printf("[agent][%s] %s %s\n", msg.Status, container.Name, msg.ID[0:12])
 
 	reconfigureEvents := map[string]bool{
 		"start":   true,
@@ -30,19 +30,19 @@ func handleEvent(msg *docker.APIEvents) {
 		"unpause": true,
 	}
 
-	if container.Config.Labels["service_type"] == "web" && reconfigureEvents[msg.Status] {
-		fmt.Printf("[mc_agent] matched event status: %s, label: service_type=web\n", msg.Status)
+	if container.Config.Labels["microcosm.type"] == "web" && reconfigureEvents[msg.Status] {
+		fmt.Printf("[agent] matched event status: %s, label: microcosm.type=web\n", msg.Status)
 
 		dataContainerId, err := findOrCreateDataContainer(client)
 		if err != nil {
-			fmt.Errorf("[mc_agent] could not find data container %v\n", err)
+			fmt.Errorf("[agent] could not find data container %v\n", err)
 			return
 		}
 		// TODO find or build reconfigure image
 		fmt.Printf("           dataContainerId: %s\n", dataContainerId)
 		err = reconfigure(client, dataContainerId)
 		if err != nil {
-			fmt.Errorf("[mc_agent] could not reconfigure data container %v\n", err)
+			fmt.Errorf("[agent] could not reconfigure data container %v\n", err)
 			return
 		}
 		// TODO find and start/restart mc_proxy
@@ -50,7 +50,7 @@ func handleEvent(msg *docker.APIEvents) {
 }
 
 func main() {
-	fmt.Println("[mc_agent] starting...")
+	fmt.Println("[agent] starting...")
 
 	client, err := dockerclient.New()
 	if err != nil {

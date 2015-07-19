@@ -119,7 +119,7 @@ func createProxyContainer(client *docker.Client, dataContainerId string) (*docke
 		},
 		HostConfig: &docker.HostConfig{
 			NetworkMode: "host",
-			VolumesFrom: []string{dataContainerId},
+			VolumesFrom: []string{"microcosm-code", "microcosm-proxy-data"},
 		},
 	}
 	return client.CreateContainer(opts)
@@ -134,7 +134,7 @@ func reconfigure(client *docker.Client, dataContainerId string) error {
 		},
 		HostConfig: &docker.HostConfig{
 			Binds:       []string{"/var/run/docker.sock:/var/run/docker.sock"},
-			VolumesFrom: []string{"microcosm-proxy-data"},
+			VolumesFrom: []string{"microcosm-code", "microcosm-proxy-data"},
 		},
 	}
 
