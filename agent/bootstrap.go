@@ -16,7 +16,6 @@ func bootstrap(client *docker.Client) error {
 	if err != nil {
 		return logError("failed to find data container", err)
 	}
-	fmt.Println("AAA")
 
 	opts := docker.ListContainersOptions{
 		All:     true,
@@ -26,8 +25,6 @@ func bootstrap(client *docker.Client) error {
 	if err != nil {
 		return logError("failed to list proxy containers", err)
 	}
-
-	fmt.Println("BBB")
 
 	// TODO pull nginx image before we can create this container
 
@@ -44,8 +41,6 @@ func bootstrap(client *docker.Client) error {
 		fmt.Printf("[agent] created microcosm-proxy container: %s\n", proxyContainerId)
 	}
 
-	fmt.Println("CCC")
-
 	// TODO find configure image or build if not found
 
 	// reconfigure nginx
@@ -53,8 +48,6 @@ func bootstrap(client *docker.Client) error {
 	if err != nil {
 		return logError("failed to reconfigure nginx", err)
 	}
-
-	fmt.Println("DDD")
 
 	proxyInfo, err := client.InspectContainer(proxyContainerId)
 	if err != nil {
