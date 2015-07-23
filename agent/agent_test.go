@@ -26,7 +26,29 @@ func TestRegister(t *testing.T) {
 }
 
 func TestCancel(t *testing.T) {
-	t.Skip("TODO")
+	agent := New()
+
+	handler := &EventHandler{
+		Matcher: NewEventMatcher("web", "start", "restart"),
+		Command: &Command{},
+	}
+
+	otherHandler := &EventHandler{
+		Matcher: NewEventMatcher("db", "stop"),
+		Command: &Command{},
+	}
+
+	agent.Register(handler)
+	agent.Register(otherHandler)
+	cancelledHandler := agent.Cancel(handler)
+
+	if len(agent.Handlers) != 1 {
+		t.Errorf("expecting 1 registered handler, got %d", len(agent.Handlers))
+	}
+
+	if cancelledHandler != handler {
+		t.Error("expected cancelled handler to be", handler, "got", cancelledHandler)
+	}
 }
 
 func TestFindTasksForEvent(t *testing.T) {
