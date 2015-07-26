@@ -86,11 +86,13 @@ func (agent *Agent) Listen() {
 
 	agent.Channel = make(chan *docker.Event, 10)
 	err := agent.Docker.AddEventListener(agent.Channel)
-	agent.Errors <- err
+	go func() { agent.Errors <- err }()
 
 	if err != nil {
 		return
 	}
+
+	fmt.Println("[agent] listening for events")
 
 	for {
 		event, ok := <-agent.Channel
