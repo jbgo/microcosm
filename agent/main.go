@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"fmt"
 	docker "github.com/fsouza/go-dockerclient"
@@ -75,3 +76,5 @@ func main() {
 		}
 	}
 }
+*/
+func main() {}
