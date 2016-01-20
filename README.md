@@ -19,3 +19,5 @@ Now follow the instructions for any develop with Docker tutorial. Something like
 In your web browser:
 
     http://my-app.docker
+
+Or something like that...

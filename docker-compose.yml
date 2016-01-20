@@ -1,0 +1,24 @@
+dns:
+  build: ./dnsmasq
+  container_name: dns
+  net: host
+  environment:
+    DOCKER_IP: ${DOCKER_IP}
+
+hipache:
+  build: ./hipache
+  container_name: hipache
+  ports:
+    - 80:80
+  environment:
+    REDIS_URL: redis://redis.docker:6379
+  dns: ${DOCKER_IP}
+
+redis:
+  image: redis
+  container_name: redis
+  ports:
+    - 6379:6379
+  volumes_from:
+    # create your data container with `docker create --name=redis_data redis`
+    - redis_data
