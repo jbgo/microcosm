@@ -1,3 +1,0 @@
-export DOCKER_TLS_VERIFY=1
-export DOCKER_CERT_PATH=`pwd`/.cert
-export DOCKER_HOST=tcp://192.168.33.33:2376
