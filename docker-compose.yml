@@ -1,24 +1,19 @@
-dns:
-  build: ./dnsmasq
-  container_name: dns
+consul:
+  image: progrium/consul
+  command: -server -bootstrap -ui-dir /ui
+  container_name: microcosm_consul
   net: host
-  environment:
-    DOCKER_IP: ${DOCKER_IP}
 
-hipache:
-  build: ./hipache
-  container_name: hipache
+registrator:
+  image: gliderlabs/registrator
+  command: consul://localhost:8500
+  container_name: microcosm_registrator
+  net: host
+  volumes:
+    - /var/run/docker.sock:/tmp/docker.sock
+
+load_balancer:
+  build: ./openresty
+  container_name: microcosm_load_balancer
   ports:
     - 80:80
-  environment:
-    REDIS_URL: redis://redis.docker:6379
-  dns: ${DOCKER_IP}
-
-redis:
-  image: redis
-  container_name: redis
-  ports:
-    - 6379:6379
-  volumes_from:
-    # create your data container with `docker create --name=redis_data redis`
-    - redis_data
